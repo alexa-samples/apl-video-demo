@@ -1,23 +1,39 @@
-/* eslint-disable  func-names */
-/* eslint-disable  no-console */
-
 const Alexa = require('ask-sdk-core')
+const videoURL = "https://public-us-east-1.s3.amazonaws.com/video/BigBuckBunny.mp4"
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     return handlerInput.requestEnvelope.request.type === 'LaunchRequest'
   },
   handle(handlerInput) {
-    const speechText = 'Welcome to the APL Video Demo! You can control the video playback by saying play or pause.'
-
+    const speechText = 'Welcome to the APL Video Demo! Here is your video.'
     return handlerInput.responseBuilder
       .speak(speechText)
       .addDirective({
         type: 'Alexa.Presentation.APL.RenderDocument',
-        version: '1.2',
-        document: require('./apl/video'), // Import video APL document
-        datasources: {}
+        token: "documentToken",
+        document: require('./apl/video'), 
+        datasources: {
+                    "data":
+                    {
+                        "properties":
+                        {
+                            "videoURL": videoURL
+                        }
+                    } 
+                }
       })
+      .addDirective({
+              "type": "Alexa.Presentation.APL.ExecuteCommands",
+              "token": "documentToken",
+              "commands": [
+                {  
+                              "type": "ControlMedia",
+                              "componentId": "videoPlayerId",
+                              "command": "play"
+                          }
+    ]
+})
       .getResponse()
   },
 };
@@ -37,14 +53,14 @@ const VideoControlIntentHandler = {
           // For more information about ControlMedia command see: https://developer.amazon.com/docs/alexa-presentation-language/apl-commands-media.html
           .addDirective({
               type : 'Alexa.Presentation.APL.ExecuteCommands',
-              token: 'videoToken',
+              token: 'documentToken',
               commands: [
                   {
                       "type": "Sequential",
                       "commands": [
                           {  
                               "type": "ControlMedia",
-                              "componentId": "APLVideo",
+                              "componentId": "videoPlayerId",
                               "command": `${videoAction}`
                           }
                       ]
@@ -123,5 +139,4 @@ exports.handler = skillBuilder
     SessionEndedRequestHandler
   )
   .addErrorHandlers(ErrorHandler)
-  .withCustomUserAgent('apl-video/v1')
   .lambda();

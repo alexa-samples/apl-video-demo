@@ -1,28 +1,174 @@
 {
-  "type": "APL",
-  "version": "1.2",
-  "settings": {},
-  "theme": "dark",
-  "import": [],
-  "resources": [],
-  "styles": {},
-  "onMount": [],
-  "graphics": {},
-  "commands": {},
-  "layouts": {},
-  "mainTemplate": {
-      "parameters": [
-          "payload"
-      ],
-      "items": [
-          {
-              "type": "Video",
-              "id": "APLVideo",
-              "width": "100vw",
-              "height": "100vh",
-              "autoplay": true,
-              "source": "https://dag-github-assets.s3-us-west-2.amazonaws.com/alexa-cookbook/Alexa-hosted+Setup.mp4"
-          }
-      ]
-  }
+    "type": "APL",
+    "version": "1.8",
+    "license": "Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.\nSPDX-License-Identifier: LicenseRef-.amazon.com.-AmznSL-1.0\nLicensed under the Amazon Software License  http://aws.amazon.com/asl/",
+    "import": [
+        {
+            "name": "alexa-layouts",
+            "version": "1.4.0"
+        }
+    ],
+    "mainTemplate": {
+        "parameters": [
+            "payload"
+        ],
+        "items": [
+            {
+                "type": "Container",
+                "id": "mainContainer",
+                "height": "100vh",
+                "width": "100vw",
+                "bind": [
+                    {
+                        "name": "sliderThumbPosition",
+                        "value": 0
+                    },
+                    {
+                        "name": "videoProgressValue",
+                        "type": "number",
+                        "value": 0
+                    },
+                    {
+                        "name": "videoTotalValue",
+                        "type": "number",
+                        "value": 0
+                    },
+                    {
+                        "name": "buttonPressed",
+                        "type": "number",
+                        "value": 0
+                    }
+                ],
+                "items": [
+                    {
+                        "type": "AlexaBackground"
+                    },
+                    {
+                        "type": "TouchWrapper",
+                        "onPress": [
+                            {
+                                "type": "Sequential",
+                                "commands": [
+                                    {
+                                        "type": "AnimateItem",
+                                        "easing": "ease-in-out",
+                                        "duration": 500,
+                                        "componentId": "controlsContainer",
+                                        "value": [
+                                            {
+                                                "property": "opacity",
+                                                "to": "${buttonPressed == 1 ? 0 : 1}"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "SetValue",
+                                        "componentId": "mainContainer",
+                                        "property": "buttonPressed",
+                                        "value": "${buttonPressed == 1 ? 0 : 1}"
+                                    }
+                                ]
+                            }
+                        ],
+                        "item": {
+                            "autoplay": false,
+                            "audioTrack": "foreground",
+                            "source": [
+                                "${payload.data.properties.videoURL}"
+                            ],
+                            "onPlay": [
+                                {
+                                    "type": "SetValue",
+                                    "property": "videoTotalValue",
+                                    "value": "${event.duration}"
+                                }
+                            ],
+                            "onTrackUpdate": [
+                                {
+                                    "type": "SetValue",
+                                    "property": "videoTotalValue",
+                                    "value": "${event.duration}"
+                                }
+                            ],
+                            "onTimeUpdate": [
+                                {
+                                    "type": "SetValue",
+                                    "property": "videoProgressValue",
+                                    "value": "${event.currentTime}"
+                                },
+                                {
+                                    "type": "SetValue",
+                                    "componentId": "slider",
+                                    "property": "progressValue",
+                                    "value": "${videoProgressValue}"
+                                },
+                                {
+                                    "type": "SetValue",
+                                    "property": "videoTotalValue",
+                                    "value": "${event.duration}"
+                                }
+                            ],
+                            "onPause": [],
+                            "type": "Video",
+                            "id": "videoPlayerId",
+                            "width": "100vw",
+                            "height": "100vh",
+                            "alignSelf": "center",
+                            "shrink": 1
+                        }
+                    },
+                    {
+                        "position": "absolute",
+                        "top": "70vh",
+                        "alignItems": "center",
+                        "item": [
+                            {
+                                "type": "AlexaSlider",
+                                "id": "slider",
+                                "progressValue": "${videoProgressValue}",
+                                "totalValue": "${videoTotalValue}",
+                                "positionPropertyName": "sliderThumbPosition",
+                                "metadataDisplayed": true,
+                                "metadataPosition": "above_right",
+                                "width": "100vw",
+                                "paddingBottom": "90dp",
+                                "onUpCommand": [
+                                    {
+                                        "type": "SetValue",
+                                        "componentId": "debugText",
+                                        "property": "text",
+                                        "value": "${sliderThumbPosition - videoProgressValue}"
+                                    },
+                                    {
+                                        "type": "ControlMedia",
+                                        "componentId": "videoPlayerId",
+                                        "command": "seek",
+                                        "value": "${sliderThumbPosition - videoProgressValue}"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "AlexaTransportControls",
+                                "mediaComponentId": "videoPlayerId",
+                                "playPauseToggleButtonId": "playPauseToggleButtonId",
+                                "primaryControlSize": "70dp",
+                                "secondaryControlSize": "60dp",
+                                "autoplay": true,
+                                "position": "absolute",
+                                "bottom": "10dp"
+                            }
+                        ],
+                        "layoutDirection": "inherit",
+                        "justifyContent": "center",
+                        "wrap": "noWrap",
+                        "alignSelf": "center",
+                        "type": "Container",
+                        "id": "controlsContainer",
+                        "opacity": 0
+                    }
+                ]
+            }
+        ]
+    },
+    "layouts": {}
 }
